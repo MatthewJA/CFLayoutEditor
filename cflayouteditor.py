@@ -8,6 +8,7 @@ import re
 import socket, sys
 import urllib
 import urllib2
+import xml.etree.ElementTree as ET
 
 try:
     from Tkinter import *
@@ -88,7 +89,6 @@ class Main(object):
             self.openLayoutFile(f.read())
             f.close()
     def openLayoutFile(self, string):
-        soup = BeautifulSoup(string)
         # check valid file
         # later though
         # yup
@@ -100,12 +100,22 @@ class Main(object):
                  'error':'errors',
                  'search':'search',
                  'layoutcss':'css'}
-        for i in pairs:
-            self.textboxes[pairs[i]].text.delete('1.0', END)
-            contents = soup.find(i).string # recheck
-            if contents:
-                self.textboxes[pairs[i]].text.insert(END, contents.decode('base64'))
-                self.textboxes[pairs[i]].text.updatetags(None)
+
+
+        root = ET.fromstring(string)
+	print root.tag
+	for child in root.find('ldata'):
+	    print child.tag
+	    if child.tag in pairs:
+		print "found"
+		self.textboxes[pairs[child.tag]].text.delete('1.0', END)
+		contents = child.text
+                if contents:
+                    self.textboxes[pairs[child.tag]].text.insert(END, contents.decode('base64'))
+                    self.textboxes[pairs[child.tag]].text.updatetags(None)
+	    else:
+		print "not found in pairs"
+		
     def cfRequest(self, page, post={}, filedata={}):
 
 	#build request
@@ -226,7 +236,8 @@ class Main(object):
         # download the layout file
         cfl = self.downloadAComicLayout(wcid)
         if cfl:
-            self.openLayoutFile(cfl)
+	    cfls = cfl.split('\r\n\r\n',2)
+            self.openLayoutFile(cfls[1])
         else:
             top = Toplevel(self.master)
             top.title("Error")
