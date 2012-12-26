@@ -104,21 +104,21 @@ class Main(object):
         try:
             root = ET.fromstring(string)
         except:
-            print "Well fuck, that's not valid xml"
+            print ('Well fuck, that\'s not valid xml')
             #TODO: display error message once i figure out how to do that in tk
             return False
-        print root.tag
+        print (root.tag)
         for child in root.find('ldata'):
-            print child.tag
+            print (child.tag)
             if child.tag in pairs:
-                print "found"
+                print ('found')
                 self.textboxes[pairs[child.tag]].text.delete('1.0', END)
                 contents = child.text
                 if contents:
                     self.textboxes[pairs[child.tag]].text.insert(END, contents.decode('base64'))
                     self.textboxes[pairs[child.tag]].text.updatetags(None)
             else:
-                print "not found in pairs"
+                print ('not found in pairs')
                 
     def cfRequest(self, page, post={}, filedata={}):
 
@@ -190,7 +190,7 @@ class Main(object):
         gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data[1])
         if gettoken:
             token = gettoken.group(3)
-            print "token: "+token
+            print ('token: '+token)
             self.token = token;
             return token;
         else:
@@ -252,7 +252,7 @@ class Main(object):
         cfl = self.cfRequest('managecomic.php?id=%s&action=exportlayout'%wcid)
         return cfl[1]
     def doUpload(self, menu, top, comics):
-        print "Upload called"
+        print ('Upload called')
         c = menu.get(menu.curselection())
         top.destroy()
         wcid = comics[c]
@@ -271,8 +271,6 @@ class Main(object):
             'filename' : 'cfledit_save.cfl.xml',
             'filedata' : cfl
         }
-
-        print "Time to upload dis shee-aat"
 
         self.cfRequest('managecomic.php?id=%s&action=importlayout'%wcid,{'token' : self.getToken()},layoutfile)
 
@@ -395,8 +393,6 @@ class Main(object):
             if self.__class__.updateId is None:
                 self.updateAllLineNumbers()
 
-        def checkSpecialInput(self):
-            print "Key"
 
         def getLineNumbers(self):
             x = 0
