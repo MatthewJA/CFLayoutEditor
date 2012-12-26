@@ -113,7 +113,7 @@ class Main(object):
         try:
             root = ET.fromstring(string)
         except:
-            print ('Well fuck, that\'s not valid xml')
+            self.popupMessage('Well fuck, that\'s not valid xml')
             #TODO: display error message once i figure out how to do that in tk
             return False
         print (root.tag)
@@ -132,7 +132,14 @@ class Main(object):
                         break
             else:
                 print ('not found in pairs')
-                
+    def popupMessage(self, message, title=""):
+        top = Toplevel(self.master, width=300, height=300)
+        if title:
+            topwindow.title("Comic Select")
+        m = Message(top, text=message, width=300)
+        m.pack()
+        b = Button(top, text="OK", command=top.destroy)
+        b.pack()
     def cfRequest(self, page, post={}, filedata={}):
 
         #build request

@@ -1,3 +1,5 @@
-add validator for layouts, or at very least make sure everything exists
+comics with same name in select
 
-tab -> indent
+kyo broke select for me
+
+parsing code instead of regex
