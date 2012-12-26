@@ -434,6 +434,10 @@ class Main(object):
                 Text.__init__(self, *args, **kwargs)
                 self.tag_configure("blue",foreground="#0000ff")
                 self.tag_configure("red",foreground="#ff0000")
+                self.tag_configure("green",foreground="#009900")
+                self.tag_configure("orange",foreground="#FF9900")
+                self.tag_configure("cyan",foreground="#0099FF")
+                self.tag_configure("pink",foreground="#FF00FF")
                 self.tag_configure("cf_v",foreground="#2DA420")
                 self.tag_configure("cf_c",foreground="#289D95")
                 self.tag_configure("grey",foreground="#7C7C7C")
@@ -449,7 +453,10 @@ class Main(object):
                 # should probably make this automatic at some point
 	    def handlePaste(self, data):
 		#for some reason pasting doesn't delete the selected text, so we do it here:
-		data.widget.delete(SEL_FIRST,SEL_LAST)
+		try:
+			data.widget.delete(SEL_FIRST,SEL_LAST)
+		except:
+			pass
 	    def handleTab(self, data):
 		sel = ''
 		try:
@@ -475,8 +482,14 @@ class Main(object):
                     self.highlight(r'[^{}]+ {', 'blue')
                     self.highlight(r'}', 'blue')
                     self.highlight(r'[^{}]+:.+?;', 'red')
+                    self.highlight(r'#[A-Fa-f0-9]{3}', 'green')
+                    self.highlight(r'#[A-Fa-f0-9]{6}', 'green')
+                    self.highlight(r'(black|red|green|yellow|blue|white|transparent|orange|purple|grey|gray)', 'green')
+                    self.highlight(r'[0-9\.]+(px|em|%|pt)', 'orange')
+                    self.highlight(r'(bold|normal|blink|table|table\-cell|auto|center|left|right|underline|none|middle|both|inline|block|solid|dotted)', 'cyan')
                     self.highlight(r'\[v:.*?\]', 'cf_v')
                     self.highlight(r'\[[cl]:.*?\]', 'cf_c')
+                    self.highlight(r'\!important', 'pink')
                     self.highlight(r'\[/\]', 'cf_c')
                     self.highlight(r'/\*.*?\*/', 'grey')
             def highlight(self, pattern, tag):
