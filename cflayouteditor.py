@@ -142,8 +142,6 @@ class Main(object):
 	request += 'Cookie: '+cookiestring+'\r\n'
 	request += '\r\n'+poststring
 
-	print (request)
-
 	#send request
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect(('comicfury.com',80))
@@ -157,8 +155,6 @@ class Main(object):
 		break
 	    data += buf
 
-
-	print data
 
 	#separate headers and content
 	sem = data.split('\r\n\r\n',2)
@@ -384,6 +380,10 @@ class Main(object):
             self.vScrollbar.config(command=self.text.yview)
             if self.__class__.updateId is None:
                 self.updateAllLineNumbers()
+
+	def checkSpecialInput(self):
+	    print "Key"
+
         def getLineNumbers(self):
             x = 0
             line = '0'
@@ -438,6 +438,7 @@ class Main(object):
                 self.tag_configure("cf_c",foreground="#289D95")
                 self.tag_configure("grey",foreground="#7C7C7C")
                 self.bind('<Key>', self.updatetags)
+		self.bind('<Tab>', self.handleTab)
             def removetags(self, start, end):
                 self.tag_remove("blue", start, end)
                 self.tag_remove("red", start, end)
@@ -445,6 +446,18 @@ class Main(object):
                 self.tag_remove("cf_c", start, end)
                 self.tag_remove("grey", start, end)
                 # should probably make this automatic at some point
+	    def handleTab(self, data):
+		sel = ''
+		try:
+		    sel = data.widget.selection_get()
+		except:
+		    pass
+		if sel:
+		    data.widget.delete(SEL_FIRST,SEL_LAST)
+		    sel = '\t'+sel.replace('\n','\n\t')
+		    data.widget.insert(INSERT, sel)
+		    return "break"
+
             def updatetags(self, data):
                 self.removetags('1.0', 'end')
                 if self.mode == 'HTML':
