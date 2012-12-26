@@ -312,7 +312,7 @@ class Main(object):
             ln = ''
             step = 6
             nl = '\n'
-            lineMask = '    %s\r\n'
+            lineMask = r'    %s\r\n'
             indexMask = '@0,%d'
             for i in xrange(0, self.text.winfo_height(), step):
                 ll, cc = self.text.index(indexMask%i).split('.')
