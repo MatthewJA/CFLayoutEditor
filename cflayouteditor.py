@@ -1,25 +1,37 @@
 # standard library
 import webbrowser
+import base64
 from base64 import b64encode #reading layout files
 import re
 import socket, sys
 import urllib
-import urllib2
+try:
+    import urllib2
+except ImportError:
+    pass #urllib2 is in urllib in python 3
 import xml.etree.ElementTree as ET #for reading layout files
-import HTMLParser #html entity decode
+
+#html entity decode
+try:
+    import HTMLParser #python 2
+except ImportError:
+    from html.parser import HTMLParser #python 3
 
 try:
     from Tkinter import *
     from ttk import *
+    import tkFileDialog
 except ImportError:
     # python 3.1?
     from tkinter import *
     from tkinter.ttk import *
+    from tkinter import filedialog
     # test this on 3.1, I don't have it
     
-import tkFileDialog
-from tkFileDialog import askopenfile, asksaveasfile
-
+try:
+    from tkFileDialog import askopenfile, asksaveasfile
+except ImportError:
+    from tkinter.filedialog import askopenfilename
 version = '0.3'
 
 class Main(object):
@@ -82,7 +94,13 @@ class Main(object):
         for i in self.textboxes:
             i.delete('1.0', END)
     def load(self):
-        f = askopenfile(filetypes=[("CF layout files", "*.cfl.xml")], mode='rU')
+        try:
+            #python 2
+            f = askopenfile(filetypes=[("CF layout files", "*.cfl.xml")], mode='rU')
+        except NameError:
+            #python 3
+            fn = askopenfilename(filetypes=[("CF layout files", "*.cfl.xml")])
+            f = open(fn, 'r')
         if f:
             self.openLayoutFile(f.read())
             f.close()
@@ -113,7 +131,7 @@ class Main(object):
                 self.textboxes[pairs[child.tag]].text.delete('1.0', END)
                 contents = child.text
                 if contents:
-                    self.textboxes[pairs[child.tag]].text.insert(END, contents.decode('base64'))
+                    self.textboxes[pairs[child.tag]].text.insert(END, base64.b64decode(contents.encode('ascii')))
                     self.textboxes[pairs[child.tag]].text.updatetags(None)
             else:
                 print ('not found in pairs')
@@ -402,7 +420,7 @@ class Main(object):
             nl = '\n'
             lineMask = '    %s\n'
             indexMask = '@0,%d'
-            for i in xrange(0, self.text.winfo_height(), step):
+            for i in range(0, self.text.winfo_height(), step):
                 ll, cc = self.text.index(indexMask%i).split('.')
                 if line == ll:
                     if col != cc:
