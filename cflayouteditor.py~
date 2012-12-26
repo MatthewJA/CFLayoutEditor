@@ -402,8 +402,8 @@ class Main(object):
 
 root = Tk() # the window
 root.title("CF Layout Editor")
-iconimage = PhotoImage(file='icon.png')
-root.tk.call('wm', 'iconphoto', root._w, iconimage)
+img = PhotoImage(file='icon.png')
+root.tk.call('wm', 'iconphoto', root._w, img)
 
 main = Main(root)
 root.mainloop() # start window - events, redraws, geometry
