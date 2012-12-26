@@ -1,0 +1,7 @@
+word break words, not letters. yup.
+
+add validator for layouts, or at very least make sure everything exists
+
+automatically insert cursor when you switch tabs
+
+tab -> indent
