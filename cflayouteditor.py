@@ -101,8 +101,12 @@ class Main(object):
                  'search':'search',
                  'layoutcss':'css'}
 
-
-        root = ET.fromstring(string)
+	try:
+            root = ET.fromstring(string)
+	except:
+	    print "Well fuck, that's not valid xml"
+	    #TODO: display error message once i figure out how to do that in tk
+	    return False
 	print root.tag
 	for child in root.find('ldata'):
 	    print child.tag
