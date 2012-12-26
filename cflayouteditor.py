@@ -439,6 +439,7 @@ class Main(object):
                 self.tag_configure("grey",foreground="#7C7C7C")
                 self.bind('<Key>', self.updatetags)
 		self.bind('<Tab>', self.handleTab)
+		self.bind('<<Paste>>', self.handlePaste)
             def removetags(self, start, end):
                 self.tag_remove("blue", start, end)
                 self.tag_remove("red", start, end)
@@ -446,6 +447,9 @@ class Main(object):
                 self.tag_remove("cf_c", start, end)
                 self.tag_remove("grey", start, end)
                 # should probably make this automatic at some point
+	    def handlePaste(self, data):
+		#for some reason pasting doesn't delete the selected text, so we do it here:
+		data.widget.delete(SEL_FIRST,SEL_LAST)
 	    def handleTab(self, data):
 		sel = ''
 		try:
