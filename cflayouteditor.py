@@ -1,14 +1,12 @@
-# dependancies
-from bs4 import BeautifulSoup
-
 # standard library
 import webbrowser
-from base64 import b64encode
+from base64 import b64encode #reading layout files
 import re
 import socket, sys
 import urllib
 import urllib2
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET #for reading layout files
+import HTMLParser #html entity decode
 
 try:
     from Tkinter import *
@@ -203,11 +201,12 @@ class Main(object):
             return False
         else:
             r = self.cfRequest('comic.php?action=yourcomics')
-            s = BeautifulSoup(r[1])
-            comicnames = [i.a.string for i in s('h3')]
-            comicurls = [re.search('\d+$', i['href']).group() for i in s('a') if i['href'].startswith('managecomic.php') and
-                         i.string == 'Manage']
-            comics = dict(zip(comicnames, comicurls))
+            s = re.findall('<!--WD:([0-9]+)\|([^>]+)-->',r[1])
+            print (s)
+            h = HTMLParser.HTMLParser()
+            comics = {}
+            for i in s:
+                comics[h.unescape(i[1])] = i[0]
             topwindow = Toplevel(self.master, width=300, height=300)
             topwindow.title("Comic Select")
             topwindow.pack_propagate(False)
@@ -220,7 +219,7 @@ class Main(object):
                 top.rowconfigure(1, weight=1)
                 listbox = Listbox(top, selectmode=SINGLE)
                 listbox.grid(row=1, column=0, sticky=N+E+W+S)
-                for i in comicnames:
+                for i in comics:
                     listbox.insert(END, i)
                 scrollbar = Scrollbar(top, orient=VERTICAL)
                 scrollbar.config(command=listbox.yview)
