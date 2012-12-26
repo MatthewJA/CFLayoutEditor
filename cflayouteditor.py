@@ -402,7 +402,7 @@ class Main(object):
 
 root = Tk() # the window
 root.title("CF Layout Editor")
-iconimage = PhotoImage(file='icon.png')
+iconimage = PhotoImage(file='icon.gif')
 root.tk.call('wm', 'iconphoto', root._w, iconimage)
 
 main = Main(root)
