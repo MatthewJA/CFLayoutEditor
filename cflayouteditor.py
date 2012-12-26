@@ -1,11 +1,12 @@
 # dependancies
-import mechanize
 from bs4 import BeautifulSoup
 
 # standard library
 import webbrowser
 from base64 import b64encode
 import re
+import socket, sys
+import urllib
 import urllib2
 
 try:
@@ -25,11 +26,10 @@ version = '0.3'
 class Main(object):
     def __init__(self, master):
         self.master = master
+
+	# for our http requests
+	self.cookies = {}
         
-        self.br = mechanize.Browser()
-        self.br.set_handle_redirect(True)
-        self.br.set_handle_referer(True)
-        self.br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
         
         # construct menus
         self.menubar = Menu(root)
@@ -105,15 +105,57 @@ class Main(object):
             if contents:
                 self.textboxes[pairs[i]].text.insert(END, contents.decode('base64'))
                 self.textboxes[pairs[i]].text.updatetags(None)
+    def cfRequest(self, page, post={}):
+
+	#build request
+	poststring = urllib.urlencode(post)
+	cookiestring = ''
+	for (name,value) in self.cookies.items():
+	    cookiestring += '%s=%s; '%(urllib.quote_plus(name), urllib.quote_plus(value))
+
+	request = ('POST' if post else 'GET')+' /'+page+' HTTP/1.0\r\n'
+	request += 'Host: comicfury.com\r\n'
+	if post:
+	    request += 'Content-Length: %s\r\n'%len(poststring)
+	    request += 'Content-Type: application/x-www-form-urlencoded\r\n'
+	request += 'Cookie: '+cookiestring+'\r\n'
+	request += '\r\n'+poststring
+
+	print (request)
+
+	#send request
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	sock.connect(('comicfury.com',80))
+	sock.send(request)
+
+	#fetch data
+	data = ''
+	while 1:
+	    buf = sock.recv(1000)
+	    if not buf:
+		break
+	    data += buf
+
+	#separate headers and content
+	sem = data.split('\r\n\r\n',2)
+
+
+	#set new cookies
+	newcookies = re.findall("Set-Cookie: (([A-Za-z0-9_\-\.]+)=([^;]+);)",sem[0])
+	for cookie in newcookies:
+	    self.cookies[cookie[1]] = cookie[2]
+
+	print (self.cookies)
+
+	return data
     def download(self):
         self.selectComicAndRun(self.doDownload, self.download)
     def selectComicAndRun(self, function, caller):
-        self.br.open('http://comicfury.com/comic.php?action=yourcomics')
-        r = self.br.response().read()
-        if 'You are not logged in' in r and '<div class="ehead">' in r:
+        if 'user' not in self.cookies:
             self.cf_login(caller=caller)
             return False
         else:
+	    r = self.cfRequest('comic.php?action=yourcomics')
             s = BeautifulSoup(r)
             comicnames = [i.a.string for i in s('h3')]
             comicurls = [re.search('\d+$', i['href']).group() for i in s('a') if i['href'].startswith('managecomic.php') and
@@ -160,8 +202,7 @@ class Main(object):
             b = Button(top, text='OK', command=top.destroy)
             b.grid(row=1)
     def downloadAComicLayout(self, wcid):
-        self.br.open('http://comicfury.com/managecomic.php?id=%s&action=exportlayout'%wcid)
-        cfl = self.br.response().read()
+        cfl = self.cfRequest('managecomic.php?id=%s&action=exportlayout'%wcid)
         return cfl
     def doUpload(self, menu, top, comics):
         c = menu.get(menu.curselection())
@@ -227,9 +268,7 @@ class Main(object):
 
     # cf stuff
     def logout(self):
-        r = self.br.open('http://comicfury.com/login.php')
-        self.br.select_form(nr=1)
-        self.br.submit()
+        self.cookies = {}
     def cf_login(self, incorrect=False, caller=None):
         # get login data
         top = Toplevel(self.master)
@@ -260,21 +299,19 @@ class Main(object):
         u = username.get()
         p = password.get()
         top.destroy()
+
         # actually login. cf_login only handles the popup
-        r = self.br.open('http://comicfury.com/login.php')
-        self.br.select_form(nr=1)
-        self.br.form['username'] = u
-        self.br.form['password'] = p
-        self.br.submit()
+        r =  self.cfRequest('login.php',{'username' : u,'password' : p})
+
         # we good? we cool?
-        if self.br.geturl().endswith('login.php'):
-            self.cf_login(incorrect=True, caller=caller)
-            return False
-        else:
+        if 'user' in self.cookies:
             # WE GOOD. WE COOL.
             if caller:
                 caller()
             return True
+        else:
+            self.cf_login(incorrect=True, caller=caller)
+            return False
     # custom textbox widget thing
     class Textbox(Text):
         updateperiod = 50
