@@ -168,7 +168,7 @@ class Main(object):
 
 	#separate headers and content
 	sem = data.split('\r\n\r\n',2)
-
+	#TODO: add check for sem[1] and create sem[1] if it doesn't exist
 
 	#set new cookies
 	newcookies = re.findall("Set-Cookie: (([A-Za-z0-9_\-\.]+)=([^;]+);)",sem[0])
@@ -176,14 +176,14 @@ class Main(object):
 	    self.cookies[cookie[1]] = cookie[2]
 
 
-	return data
+	return sem
     def getToken(self):
 	if 'user' not in self.cookies:
 	    return False
 	if self.token:
 	    return self.token
 	data = self.cfRequest('login.php')
-	gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data)
+	gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data[1])
 	if gettoken:
 	    token = gettoken.group(3)
 	    print "token: "+token
@@ -199,7 +199,7 @@ class Main(object):
             return False
         else:
 	    r = self.cfRequest('comic.php?action=yourcomics')
-            s = BeautifulSoup(r)
+            s = BeautifulSoup(r[1])
             comicnames = [i.a.string for i in s('h3')]
             comicurls = [re.search('\d+$', i['href']).group() for i in s('a') if i['href'].startswith('managecomic.php') and
                          i.string == 'Manage']
@@ -236,8 +236,7 @@ class Main(object):
         # download the layout file
         cfl = self.downloadAComicLayout(wcid)
         if cfl:
-	    cfls = cfl.split('\r\n\r\n',2)
-            self.openLayoutFile(cfls[1])
+            self.openLayoutFile(cfl)
         else:
             top = Toplevel(self.master)
             top.title("Error")
@@ -247,7 +246,7 @@ class Main(object):
             b.grid(row=1)
     def downloadAComicLayout(self, wcid):
         cfl = self.cfRequest('managecomic.php?id=%s&action=exportlayout'%wcid)
-        return cfl
+        return cfl[1]
     def doUpload(self, menu, top, comics):
 	print "Upload called"
         c = menu.get(menu.curselection())
@@ -350,7 +349,7 @@ class Main(object):
         top.destroy()
 
         # actually login. cf_login only handles the popup
-        r =  self.cfRequest('login.php',{'username' : u,'password' : p})
+        self.cfRequest('login.php',{'username' : u,'password' : p})
 
         # we good? we cool?
         if 'user' in self.cookies:
