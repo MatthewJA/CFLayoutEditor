@@ -1,37 +1,27 @@
-# standard library
 import webbrowser
 import base64
 from base64 import b64encode #reading layout files
 import re
 import socket, sys
 import urllib
-try:
-    import urllib2
-except ImportError:
-    pass #urllib2 is in urllib in python 3
 import xml.etree.ElementTree as ET #for reading layout files
 
-#html entity decode
 try:
-    import HTMLParser #python 2
-except ImportError:
-    from html.parser import HTMLParser #python 3
-
-try:
+    #python 2
+    import HTMLParser
     from Tkinter import *
     from ttk import *
     import tkFileDialog
+    from tkFileDialog import askopenfile, asksaveasfile
+    import urllib2
 except ImportError:
-    # python 3.1?
+    # python 3
+    from html.parser import HTMLParser 
     from tkinter import *
     from tkinter.ttk import *
     from tkinter import filedialog
-    # test this on 3.1, I don't have it
-    
-try:
-    from tkFileDialog import askopenfile, asksaveasfile
-except ImportError:
     from tkinter.filedialog import askopenfilename, asksaveasfilename
+    
 version = '0.3'
 
 class Main(object):
