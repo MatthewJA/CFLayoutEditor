@@ -29,6 +29,7 @@ class Main(object):
 
 	# for our http requests
 	self.cookies = {}
+	self.token = ''
         
         
         # construct menus
@@ -105,19 +106,39 @@ class Main(object):
             if contents:
                 self.textboxes[pairs[i]].text.insert(END, contents.decode('base64'))
                 self.textboxes[pairs[i]].text.updatetags(None)
-    def cfRequest(self, page, post={}):
+    def cfRequest(self, page, post={}, filedata={}):
 
 	#build request
-	poststring = urllib.urlencode(post)
 	cookiestring = ''
 	for (name,value) in self.cookies.items():
 	    cookiestring += '%s=%s; '%(urllib.quote_plus(name), urllib.quote_plus(value))
+
+
+	if not filedata:
+	    poststring = urllib.urlencode(post)
+	else:
+	    separator = '--CFLayoutEditBoundary' #this is really half assed
+	    poststring = ''
+	    for (name,value) in post.items():
+		poststring += '--%s\r\n'%separator
+		poststring += 'Content-Disposition: form-data; name="%s"'%urllib.quote_plus(name)
+		poststring += '\r\n\r\n'
+		poststring += value+'\r\n'
+	    poststring += '--%s\r\n'%separator
+	    poststring += 'Content-Disposition: form-data; name="%s"; filename="%s"'%(urllib.quote_plus(filedata['inputname']),urllib.quote_plus(filedata['filename']))
+	    poststring += '\r\nContent-Type: text/xml\r\n\r\n'
+	    poststring += filedata['filedata']+'\r\n'
+	    poststring += '--%s--\r\n'%separator
+	    
 
 	request = ('POST' if post else 'GET')+' /'+page+' HTTP/1.0\r\n'
 	request += 'Host: comicfury.com\r\n'
 	if post:
 	    request += 'Content-Length: %s\r\n'%len(poststring)
-	    request += 'Content-Type: application/x-www-form-urlencoded\r\n'
+	    if not filedata:
+		request += 'Content-Type: application/x-www-form-urlencoded\r\n'
+	    else:
+		request += 'Content-Type: multipart/form-data; boundary='+separator+'\r\n'
 	request += 'Cookie: '+cookiestring+'\r\n'
 	request += '\r\n'+poststring
 
@@ -136,6 +157,9 @@ class Main(object):
 		break
 	    data += buf
 
+
+	print data
+
 	#separate headers and content
 	sem = data.split('\r\n\r\n',2)
 
@@ -145,9 +169,22 @@ class Main(object):
 	for cookie in newcookies:
 	    self.cookies[cookie[1]] = cookie[2]
 
-	print (self.cookies)
 
 	return data
+    def getToken(self):
+	if 'user' not in self.cookies:
+	    return False
+	if self.token:
+	    return self.token
+	data = self.cfRequest('login.php')
+	gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data)
+	if gettoken:
+	    token = gettoken.group(3)
+	    print "token: "+token
+	    self.token = token;
+	    return token;
+	else:
+	    return False
     def download(self):
         self.selectComicAndRun(self.doDownload, self.download)
     def selectComicAndRun(self, function, caller):
@@ -205,25 +242,30 @@ class Main(object):
         cfl = self.cfRequest('managecomic.php?id=%s&action=exportlayout'%wcid)
         return cfl
     def doUpload(self, menu, top, comics):
+	print "Upload called"
         c = menu.get(menu.curselection())
         top.destroy()
         wcid = comics[c]
+
         # backup old layout file
         cflb = self.downloadAComicLayout(wcid)
         if cflb:
             f = open("_backup.cfl.xml.backup", 'w')
             f.write(cflb)
             f.close()
+
         # get the layout file
         cfl = self.makeLayoutFile()
-        r = self.br.open('http://comicfury.com/managecomic.php?id=%s&action=importlayout'%wcid)
-        self.br.select_form(nr=1)
-        f = open("_temp.cfl.xml", "w")
-        f.write(cfl)
-        f.close()
-        f = open("_temp.cfl.xml", "r")
-        self.br.form.add_file(f, 'text/xml', 'layout.cfl.xml')
-        self.br.submit()
+	layoutfile = {
+	    'inputname' : 'layout',
+	    'filename' : 'cfledit_save.cfl.xml',
+	    'filedata' : cfl
+	}
+
+	print "Time to upload dis shee-aat"
+
+	self.cfRequest('managecomic.php?id=%s&action=importlayout'%wcid,{'token' : self.getToken()},layoutfile)
+
     def upload(self):
         self.selectComicAndRun(self.doUpload, self.upload)
     def makeLayoutFile(self):
