@@ -28,9 +28,9 @@ class Main(object):
     def __init__(self, master):
         self.master = master
 
-	# for our http requests
-	self.cookies = {}
-	self.token = ''
+        # for our http requests
+        self.cookies = {}
+        self.token = ''
         
         
         # construct menus
@@ -101,100 +101,100 @@ class Main(object):
                  'search':'search',
                  'layoutcss':'css'}
 
-	try:
+        try:
             root = ET.fromstring(string)
-	except:
-	    print "Well fuck, that's not valid xml"
-	    #TODO: display error message once i figure out how to do that in tk
-	    return False
-	print root.tag
-	for child in root.find('ldata'):
-	    print child.tag
-	    if child.tag in pairs:
-		print "found"
-		self.textboxes[pairs[child.tag]].text.delete('1.0', END)
-		contents = child.text
+        except:
+            print "Well fuck, that's not valid xml"
+            #TODO: display error message once i figure out how to do that in tk
+            return False
+        print root.tag
+        for child in root.find('ldata'):
+            print child.tag
+            if child.tag in pairs:
+                print "found"
+                self.textboxes[pairs[child.tag]].text.delete('1.0', END)
+                contents = child.text
                 if contents:
                     self.textboxes[pairs[child.tag]].text.insert(END, contents.decode('base64'))
                     self.textboxes[pairs[child.tag]].text.updatetags(None)
-	    else:
-		print "not found in pairs"
-		
+            else:
+                print "not found in pairs"
+                
     def cfRequest(self, page, post={}, filedata={}):
 
-	#build request
-	cookiestring = ''
-	for (name,value) in self.cookies.items():
-	    cookiestring += '%s=%s; '%(urllib.quote_plus(name), urllib.quote_plus(value))
+        #build request
+        cookiestring = ''
+        for (name,value) in self.cookies.items():
+            cookiestring += '%s=%s; '%(urllib.quote_plus(name), urllib.quote_plus(value))
 
 
-	if not filedata:
-	    poststring = urllib.urlencode(post)
-	else:
-	    separator = '--CFLayoutEditBoundary' #this is really half assed
-	    poststring = ''
-	    for (name,value) in post.items():
-		poststring += '--%s\r\n'%separator
-		poststring += 'Content-Disposition: form-data; name="%s"'%urllib.quote_plus(name)
-		poststring += '\r\n\r\n'
-		poststring += value+'\r\n'
-	    poststring += '--%s\r\n'%separator
-	    poststring += 'Content-Disposition: form-data; name="%s"; filename="%s"'%(urllib.quote_plus(filedata['inputname']),urllib.quote_plus(filedata['filename']))
-	    poststring += '\r\nContent-Type: text/xml\r\n\r\n'
-	    poststring += filedata['filedata']+'\r\n'
-	    poststring += '--%s--\r\n'%separator
-	    
+        if not filedata:
+            poststring = urllib.urlencode(post)
+        else:
+            separator = '--CFLayoutEditBoundary' #this is really half assed
+            poststring = ''
+            for (name,value) in post.items():
+                poststring += '--%s\r\n'%separator
+                poststring += 'Content-Disposition: form-data; name="%s"'%urllib.quote_plus(name)
+                poststring += '\r\n\r\n'
+                poststring += value+'\r\n'
+            poststring += '--%s\r\n'%separator
+            poststring += 'Content-Disposition: form-data; name="%s"; filename="%s"'%(urllib.quote_plus(filedata['inputname']),urllib.quote_plus(filedata['filename']))
+            poststring += '\r\nContent-Type: text/xml\r\n\r\n'
+            poststring += filedata['filedata']+'\r\n'
+            poststring += '--%s--\r\n'%separator
+            
 
-	request = ('POST' if post else 'GET')+' /'+page+' HTTP/1.0\r\n'
-	request += 'Host: comicfury.com\r\n'
-	if post:
-	    request += 'Content-Length: %s\r\n'%len(poststring)
-	    if not filedata:
-		request += 'Content-Type: application/x-www-form-urlencoded\r\n'
-	    else:
-		request += 'Content-Type: multipart/form-data; boundary='+separator+'\r\n'
-	request += 'Cookie: '+cookiestring+'\r\n'
-	request += '\r\n'+poststring
+        request = ('POST' if post else 'GET')+' /'+page+' HTTP/1.0\r\n'
+        request += 'Host: comicfury.com\r\n'
+        if post:
+            request += 'Content-Length: %s\r\n'%len(poststring)
+            if not filedata:
+                request += 'Content-Type: application/x-www-form-urlencoded\r\n'
+            else:
+                request += 'Content-Type: multipart/form-data; boundary='+separator+'\r\n'
+        request += 'Cookie: '+cookiestring+'\r\n'
+        request += '\r\n'+poststring
 
-	#send request
-	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.connect(('comicfury.com',80))
-	sock.send(request)
+        #send request
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(('comicfury.com',80))
+        sock.send(request)
 
-	#fetch data
-	data = ''
-	while 1:
-	    buf = sock.recv(1000)
-	    if not buf:
-		break
-	    data += buf
-
-
-	#separate headers and content
-	sem = data.split('\r\n\r\n',2)
-	#TODO: add check for sem[1] and create sem[1] if it doesn't exist
-
-	#set new cookies
-	newcookies = re.findall("Set-Cookie: (([A-Za-z0-9_\-\.]+)=([^;]+);)",sem[0])
-	for cookie in newcookies:
-	    self.cookies[cookie[1]] = cookie[2]
+        #fetch data
+        data = ''
+        while 1:
+            buf = sock.recv(1000)
+            if not buf:
+                break
+            data += buf
 
 
-	return sem
+        #separate headers and content
+        sem = data.split('\r\n\r\n',2)
+        #TODO: add check for sem[1] and create sem[1] if it doesn't exist
+
+        #set new cookies
+        newcookies = re.findall("Set-Cookie: (([A-Za-z0-9_\-\.]+)=([^;]+);)",sem[0])
+        for cookie in newcookies:
+            self.cookies[cookie[1]] = cookie[2]
+
+
+        return sem
     def getToken(self):
-	if 'user' not in self.cookies:
-	    return False
-	if self.token:
-	    return self.token
-	data = self.cfRequest('login.php')
-	gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data[1])
-	if gettoken:
-	    token = gettoken.group(3)
-	    print "token: "+token
-	    self.token = token;
-	    return token;
-	else:
-	    return False
+        if 'user' not in self.cookies:
+            return False
+        if self.token:
+            return self.token
+        data = self.cfRequest('login.php')
+        gettoken = re.search('<input([^>]+)name="token"([^>]+)value="([0-9A-Za-z]+)"',data[1])
+        if gettoken:
+            token = gettoken.group(3)
+            print "token: "+token
+            self.token = token;
+            return token;
+        else:
+            return False
     def download(self):
         self.selectComicAndRun(self.doDownload, self.download)
     def selectComicAndRun(self, function, caller):
@@ -202,7 +202,7 @@ class Main(object):
             self.cf_login(caller=caller)
             return False
         else:
-	    r = self.cfRequest('comic.php?action=yourcomics')
+            r = self.cfRequest('comic.php?action=yourcomics')
             s = BeautifulSoup(r[1])
             comicnames = [i.a.string for i in s('h3')]
             comicurls = [re.search('\d+$', i['href']).group() for i in s('a') if i['href'].startswith('managecomic.php') and
@@ -252,7 +252,7 @@ class Main(object):
         cfl = self.cfRequest('managecomic.php?id=%s&action=exportlayout'%wcid)
         return cfl[1]
     def doUpload(self, menu, top, comics):
-	print "Upload called"
+        print "Upload called"
         c = menu.get(menu.curselection())
         top.destroy()
         wcid = comics[c]
@@ -266,15 +266,15 @@ class Main(object):
 
         # get the layout file
         cfl = self.makeLayoutFile()
-	layoutfile = {
-	    'inputname' : 'layout',
-	    'filename' : 'cfledit_save.cfl.xml',
-	    'filedata' : cfl
-	}
+        layoutfile = {
+            'inputname' : 'layout',
+            'filename' : 'cfledit_save.cfl.xml',
+            'filedata' : cfl
+        }
 
-	print "Time to upload dis shee-aat"
+        print "Time to upload dis shee-aat"
 
-	self.cfRequest('managecomic.php?id=%s&action=importlayout'%wcid,{'token' : self.getToken()},layoutfile)
+        self.cfRequest('managecomic.php?id=%s&action=importlayout'%wcid,{'token' : self.getToken()},layoutfile)
 
     def upload(self):
         self.selectComicAndRun(self.doUpload, self.upload)
@@ -395,8 +395,8 @@ class Main(object):
             if self.__class__.updateId is None:
                 self.updateAllLineNumbers()
 
-	def checkSpecialInput(self):
-	    print "Key"
+        def checkSpecialInput(self):
+            print "Key"
 
         def getLineNumbers(self):
             x = 0
@@ -456,9 +456,9 @@ class Main(object):
                 self.tag_configure("cf_c",foreground="#289D95")
                 self.tag_configure("grey",foreground="#7C7C7C")
                 self.bind('<Key>', self.updatetags)
-		self.bind('<Tab>', self.handleTab)
-		self.bind('<<Paste>>', self.handlePaste)
-		self.bind('<Control-a>', self.handleSelectAll)
+                self.bind('<Tab>', self.handleTab)
+                self.bind('<<Paste>>', self.handlePaste)
+                self.bind('<Control-a>', self.handleSelectAll)
             def removetags(self, start, end):
                 self.tag_remove("blue", start, end)
                 self.tag_remove("red", start, end)
@@ -466,28 +466,28 @@ class Main(object):
                 self.tag_remove("cf_c", start, end)
                 self.tag_remove("grey", start, end)
                 # should probably make this automatic at some point
-	    def handleSelectAll(self, data):
-		data.widget.tag_add(SEL,"1.0",END)
-		data.widget.mark_set(INSERT, "1.0")
-		data.widget.see(INSERT)
-		return 'break'
-	    def handlePaste(self, data):
-		#for some reason pasting doesn't delete the selected text, so we do it here:
-		try:
-			data.widget.delete(SEL_FIRST,SEL_LAST)
-		except:
-			pass
-	    def handleTab(self, data):
-		sel = ''
-		try:
-		    sel = data.widget.selection_get()
-		except:
-		    pass
-		if sel:
-		    data.widget.delete(SEL_FIRST,SEL_LAST)
-		    sel = '\t'+sel.replace('\n','\n\t')
-		    data.widget.insert(INSERT, sel)
-		    return "break"
+            def handleSelectAll(self, data):
+                data.widget.tag_add(SEL,"1.0",END)
+                data.widget.mark_set(INSERT, "1.0")
+                data.widget.see(INSERT)
+                return 'break'
+            def handlePaste(self, data):
+                #for some reason pasting doesn't delete the selected text, so we do it here:
+                try:
+                        data.widget.delete(SEL_FIRST,SEL_LAST)
+                except:
+                        pass
+            def handleTab(self, data):
+                sel = ''
+                try:
+                    sel = data.widget.selection_get()
+                except:
+                    pass
+                if sel:
+                    data.widget.delete(SEL_FIRST,SEL_LAST)
+                    sel = '\t'+sel.replace('\n','\n\t')
+                    data.widget.insert(INSERT, sel)
+                    return "break"
 
             def updatetags(self, data):
                 self.removetags('1.0', 'end')
