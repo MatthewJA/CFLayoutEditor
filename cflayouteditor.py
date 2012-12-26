@@ -31,7 +31,7 @@ except ImportError:
 try:
     from tkFileDialog import askopenfile, asksaveasfile
 except ImportError:
-    from tkinter.filedialog import askopenfilename
+    from tkinter.filedialog import askopenfilename, asksaveasfilename
 version = '0.3'
 
 class Main(object):
@@ -100,7 +100,10 @@ class Main(object):
         except NameError:
             #python 3
             fn = askopenfilename(filetypes=[("CF layout files", "*.cfl.xml")])
-            f = open(fn, 'r')
+            if fn:
+                f = open(fn, 'r')
+            else:
+                f = False;
         if f:
             self.openLayoutFile(f.read())
             f.close()
@@ -131,8 +134,12 @@ class Main(object):
                 self.textboxes[pairs[child.tag]].text.delete('1.0', END)
                 contents = child.text
                 if contents:
-                    self.textboxes[pairs[child.tag]].text.insert(END, base64.b64decode(contents.encode('ascii')))
-                    self.textboxes[pairs[child.tag]].text.updatetags(None)
+                    try:
+                        self.textboxes[pairs[child.tag]].text.insert(END, base64.b64decode(contents.encode('ascii')))
+                        self.textboxes[pairs[child.tag]].text.updatetags(None)
+                    except:
+                        print ("Not valid base64")
+                        break
             else:
                 print ('not found in pairs')
                 
@@ -303,21 +310,31 @@ class Main(object):
         tags.append('<spage>1</spage>')
         tags.append('<ldata>')
         # I could probably do a thing like I did in openLayoutFile but ehhh it's early
-        tags.append('<overall>%s</overall>'%self.textboxes['overall'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<blog>%s</blog>'%self.textboxes['overview'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<comic>%s</comic>'%self.textboxes['comic'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<archive>%s</archive>'%self.textboxes['archive'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<blogarchive>%s</blogarchive>'%self.textboxes['blog'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<error>%s</error>'%self.textboxes['errors'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<search>%s</search>'%self.textboxes['search'].text.get('1.0',END).encode('utf-8').encode('base64'))
-        tags.append('<layoutcss>%s</layoutcss>'%self.textboxes['css'].text.get('1.0',END).encode('utf-8').encode('base64'))
+        tags.append('<overall>%s</overall>'%base64.b64encode(self.textboxes['overall'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<blog>%s</blog>'%base64.b64encode(self.textboxes['overview'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<comic>%s</comic>'%base64.b64encode(self.textboxes['comic'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<archive>%s</archive>'%base64.b64encode(self.textboxes['archive'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<blogarchive>%s</blogarchive>'%base64.b64encode(self.textboxes['blog'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<error>%s</error>'%base64.b64encode(self.textboxes['errors'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<search>%s</search>'%base64.b64encode(self.textboxes['search'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
+        tags.append('<layoutcss>%s</layoutcss>'%base64.b64encode(self.textboxes['css'].text.get('1.0',END).encode('utf-8')).decode("utf-8"))
         tags.append('</ldata>')
         tags.append('</layout>')
         return "\n".join(tags)
     def save(self):
-        f = asksaveasfile(filetypes=[("CF layout files", "*.cfl.xml")])
-        f.write(self.makeLayoutFile())
-        f.close()
+        try:
+            #python 2
+            f = asksaveasfile(filetypes=[("CF layout files", "*.cfl.xml")])
+        except NameError:
+            #python 3
+            fn = asksaveasfilename(filetypes=[("CF layout files", "*.cfl.xml")])
+            if fn:
+                f = open(fn, 'w')
+            else:
+                f = False;
+        if f:
+            f.write(self.makeLayoutFile())
+            f.close()
     def insert(self, name):
         data = {
             'css':'<!--layout:[css]-->',
