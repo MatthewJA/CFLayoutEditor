@@ -226,9 +226,11 @@ class Main(object):
             s = re.findall('<!--WD:([0-9]+)\|([^>]+)-->',r[1])
             print (s)
             h = HTMLParser.HTMLParser()
-            comics = {}
+            comicdict = {} # id : name
+            comics = [] # id
             for i in s:
-                comics[i[0]] = h.unescape(i[1])
+                comicdict[i[0]] = h.unescape(i[1])
+                comics.append(i[0])
             topwindow = Toplevel(self.master, width=300, height=300)
             topwindow.title("Comic Select")
             topwindow.pack_propagate(False)
@@ -241,16 +243,14 @@ class Main(object):
                 top.rowconfigure(1, weight=1)
                 listbox = Listbox(top, selectmode=SINGLE)
                 listbox.grid(row=1, column=0, sticky=N+E+W+S)
-                comicids = []
                 for i in comics:
-                    listbox.insert(END, comics[i]) # add the comic name to the listbox
-                    comicids.append(i) # ...and then add the comic id to the list
+                    listbox.insert(END, comicdict[i]) # add the comic name to the listbox
                     # they should match up now!
                 scrollbar = Scrollbar(top, orient=VERTICAL)
                 scrollbar.config(command=listbox.yview)
                 listbox.config(yscrollcommand=scrollbar.set)
                 scrollbar.grid(row=1, column=1, sticky=N+S)
-                b = Button(top, text="I'm cool with this, yo", command=lambda t=topwindow, m=listbox, c=comicids: function(m,t,c))
+                b = Button(top, text="I'm cool with this, yo", command=lambda t=topwindow, m=listbox, c=comics: function(m,t,c))
                 b.grid(row=2, columnspan=2, sticky=S, pady=5)
             else:
                 instruction = Label(top, text='You have no comics.')
