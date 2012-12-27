@@ -223,7 +223,6 @@ class Main(object):
             return False
         else:
             r = self.cfRequest('comic.php?action=yourcomics')
-            print (len(r))
             s = re.findall('<!--WD:([0-9]+)\|([^>]+)-->',r[1])
             print (s)
             h = HTMLParser.HTMLParser()
@@ -474,26 +473,26 @@ class Main(object):
                 self.mode = kwargs['mode']
                 del kwargs['mode']
                 Text.__init__(self, *args, **kwargs)
-                self.tag_configure("blue",foreground="#0000ff")
-                self.tag_configure("red",foreground="#ff0000")
-                self.tag_configure("green",foreground="#009900")
-                self.tag_configure("orange",foreground="#FF9900")
-                self.tag_configure("cyan",foreground="#0099FF")
-                self.tag_configure("pink",foreground="#FF00FF")
-                self.tag_configure("cf_v",foreground="#2DA420")
-                self.tag_configure("cf_c",foreground="#289D95")
-                self.tag_configure("grey",foreground="#7C7C7C")
+                self.tags = {
+                    "blue":"#0000ff",
+                    "red":"#ff0000",
+                    "green":"#009900",
+                    "orange":"#FF9900",
+                    "cyan":"#0099FF",
+                    "pink":"#FF00FF",
+                    "cf_v":"#2DA420",
+                    "cf_c":"#289D95",
+                    "grey":"#7C7C7C"
+                    }
+                for tag in self.tags:
+                    self.tag_configure(tag,foreground=self.tags[tag])
                 self.bind('<Key>', self.updatetags)
                 self.bind('<Tab>', self.handleTab)
                 self.bind('<<Paste>>', self.handlePaste)
                 self.bind('<Control-a>', self.handleSelectAll)
             def removetags(self, start, end):
-                self.tag_remove("blue", start, end)
-                self.tag_remove("red", start, end)
-                self.tag_remove("cf_v", start, end)
-                self.tag_remove("cf_c", start, end)
-                self.tag_remove("grey", start, end)
-                # should probably make this automatic at some point
+                for tag in self.tags:
+                    self.tag_remove(tag, start, end)
             def handleSelectAll(self, data):
                 data.widget.tag_add(SEL,"1.0",END)
                 data.widget.mark_set(INSERT, "1.0")
