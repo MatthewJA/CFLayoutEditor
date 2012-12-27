@@ -191,7 +191,7 @@ class Main(object):
 
 
         #separate headers and content
-        sem = data.split('\r\n\r\n',2)
+        sem = data.split('\r\n\r\n',1)
         #TODO: add check for sem[1] and create sem[1] if it doesn't exist
 
         #set new cookies
@@ -223,6 +223,7 @@ class Main(object):
             return False
         else:
             r = self.cfRequest('comic.php?action=yourcomics')
+            print (len(r))
             s = re.findall('<!--WD:([0-9]+)\|([^>]+)-->',r[1])
             print (s)
             h = HTMLParser.HTMLParser()
