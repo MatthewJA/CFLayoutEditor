@@ -1,5 +1,1 @@
-comics with same name in select
-
-kyo broke select for me
-
 parsing code instead of regex
