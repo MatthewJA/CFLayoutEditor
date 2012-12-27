@@ -228,7 +228,7 @@ class Main(object):
             h = HTMLParser.HTMLParser()
             comics = {}
             for i in s:
-                comics[h.unescape(i[1])] = i[0]
+                comics[i[0]] = h.unescape(i[1])
             topwindow = Toplevel(self.master, width=300, height=300)
             topwindow.title("Comic Select")
             topwindow.pack_propagate(False)
@@ -241,13 +241,16 @@ class Main(object):
                 top.rowconfigure(1, weight=1)
                 listbox = Listbox(top, selectmode=SINGLE)
                 listbox.grid(row=1, column=0, sticky=N+E+W+S)
+                comicids = []
                 for i in comics:
-                    listbox.insert(END, i)
+                    listbox.insert(END, comics[i]) # add the comic name to the listbox
+                    comicids.append(i) # ...and then add the comic id to the list
+                    # they should match up now!
                 scrollbar = Scrollbar(top, orient=VERTICAL)
                 scrollbar.config(command=listbox.yview)
                 listbox.config(yscrollcommand=scrollbar.set)
                 scrollbar.grid(row=1, column=1, sticky=N+S)
-                b = Button(top, text="I'm cool with this, yo", command=lambda t=topwindow, m=listbox, c=comics: function(m,t,c))
+                b = Button(top, text="I'm cool with this, yo", command=lambda t=topwindow, m=listbox, c=comicids: function(m,t,c))
                 b.grid(row=2, columnspan=2, sticky=S, pady=5)
             else:
                 instruction = Label(top, text='You have no comics.')
@@ -255,9 +258,10 @@ class Main(object):
                 b = Button(top, text='OK', command=topwindow.destroy)
                 b.grid(row=1, columnspan=2)
     def doDownload(self, menu, top, comics):
-        c = menu.get(menu.curselection())
+        selectedindex = menu.curselection()[0] # grab the index of the selected comic
+        selectedindex = int(selectedindex)
         top.destroy()
-        wcid = comics[c]
+        wcid = comics[selectedindex] # translate the index to the comic id
         # download the layout file
         cfl = self.downloadAComicLayout(wcid)
         if cfl:
